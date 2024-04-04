@@ -1,10 +1,10 @@
+import argparse
 import os
-
-from reportlab.lib.pdfencrypt import os_urandom
-
 from stock_dataset import stock_dataset
 from pyspark.sql.functions import col, round, format_string, avg, stddev, sqrt, lit, desc, lag
 from pyspark.sql import Window
+
+
 #I assume that 252 is the number of trading days in a year.
 TRADIG_DAYS = 252
 
@@ -32,30 +32,32 @@ def question_4_top_3_30_days_return(df):
     windowSpec = Window.partitionBy("ticker").orderBy("date")
     df_with_lag = df.withColumn("close_30_days_prior", lag("close", 30).over(windowSpec))
     df_with_returns = df_with_lag.withColumn("30_day_return", ((col("close") - col("close_30_days_prior")) / col("close_30_days_prior")) * 100)
-    top_returns = df_with_returns.orderBy(col("30_day_return").desc()).select("ticker", "date", "30_day_return")
+    top_returns = df_with_returns.orderBy(col("30_day_return").desc()).select("ticker", "date")
     return top_returns.limit(3)
 
 
 def run_objectives(csv_path, output_dir,  schema=None):
     stocks = stock_dataset(csv_path, schema=schema)
     res_1 = question_1_average_daily_return(stocks.stocks_df)
-    res_1.write.csv(os.path.join(output_dir, 'question_1_results.csv'),header=True)
-    print(res_1.show())
+    res_1.write.csv(os.path.join(output_dir, 'question_1_results1.csv'),header=True)
+    res_1.show()
     res_2 = question_2_most_frequently(stocks.stocks_df)
-    res_2.write.csv(os.path.join(output_dir, 'question_2_results.csv'), header=True)
-    print(res_2.show())
+    res_2.write.csv(os.path.join(output_dir, 'question_2_results2.csv'), header=True)
+    res_2.show()
     res_3 = question_3_most_volatile(stocks.stocks_df)
-    res_3.write.csv(os.path.join(output_dir, 'question_3_results.csv'), header=True)
-    print(res_3.show())
+    res_3.write.csv(os.path.join(output_dir, 'question_3_results2.csv'), header=True)
+    res_3.show()
     res_4 = question_4_top_3_30_days_return(stocks.stocks_df)
     res_4.write.csv(os.path.join(output_dir, 'question_4_results.csv'), header=True)
-    print(res_4.show())
+    res_4.show()
 
 
 
 
 
 if __name__ == '__main__':
-    csv_path = '/home/eliad/Downloads/stock_prices.csv'
-    output_dir = ''
-    run_objectives(path)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stock_file', type=str, required=True, help='the path of the stock prices file')
+    parser.add_argument('--output_dir', type=str, required=True, help='the out put directory path')
+    args = parser.parse_args()
+    run_objectives(args.stock_file, output_dir=args.output_dir)
