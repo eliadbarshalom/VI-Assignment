@@ -32,15 +32,4 @@ class stock_dataset(object):
         df = df.withColumn('date', to_date(col('date'), 'M/d/yyyy'))
         df = df.withColumn("return", (col("close") - col("open")) / col("open"))
         df = df.withColumn("trade_value", col("close") * col("volume"))
-
-
         self.stocks_df  = df
-        #todo - maybe add some tests
-
-
-
-
-
-
-if __name__ == '__main__':
-    pass
